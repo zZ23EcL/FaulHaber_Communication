@@ -1,0 +1,3 @@
+/home/zz23ecl/data/c++_work/FTDI_test/cmake-build-debug/CMakeFiles/FTDI_test.dir
+/home/zz23ecl/data/c++_work/FTDI_test/cmake-build-debug/CMakeFiles/edit_cache.dir
+/home/zz23ecl/data/c++_work/FTDI_test/cmake-build-debug/CMakeFiles/rebuild_cache.dir

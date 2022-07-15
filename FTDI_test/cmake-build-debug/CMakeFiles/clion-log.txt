@@ -1,0 +1,4 @@
+/home/zz23ecl/tools/clion-2022.1.3/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/home/zz23ecl/tools/clion-2022.1.3/bin/ninja/linux/ninja -G Ninja -S /home/zz23ecl/data/c++_work/FTDI_test -B /home/zz23ecl/data/c++_work/FTDI_test/cmake-build-debug
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/zz23ecl/data/c++_work/FTDI_test/cmake-build-debug
