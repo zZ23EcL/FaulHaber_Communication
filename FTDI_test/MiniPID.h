@@ -8,15 +8,13 @@
 
 class MiniPID{
 public:
+    MiniPID(int, int);
     MiniPID(int, int, int);
-    MiniPID(int, int, int, int);
     void setP(int);
-    void setI(int);
     void setD(int);
     void setF(int);
+    void setPID(int, int);
     void setPID(int, int, int);
-    void setPID(int, int, int, int);
-    void setMaxIOutput(int);
     void setOutputLimits(int);
     void setOutputLimits(int,int);
     void setDirection(bool);
@@ -36,11 +34,9 @@ private:
     void checkSigns();
     void init();
     int P;
-    int I;
     int D;
     int F;
 
-    int maxIOutput;
     int maxError;
     int errorSum;
 

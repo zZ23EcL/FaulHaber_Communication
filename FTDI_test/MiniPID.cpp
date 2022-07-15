@@ -18,21 +18,19 @@
 //**********************************
 //Constructor functions
 //**********************************
-MiniPID::MiniPID(int p, int i, int d){
+MiniPID::MiniPID(int p,int d){
     init();
-    P=p; I=i; D=d;
+    P=p; D=d;
 }
-MiniPID::MiniPID(int p, int i, int d, int f){
+MiniPID::MiniPID(int p, int d, int f){
     init();
-    P=p; I=i; D=d; F=f;
+    P=p; D=d; F=f;
 }
 void MiniPID::init(){
     P=0;
-    I=0;
     D=0;
     F=0;
 
-    maxIOutput=0;
     maxError=0;
     errorSum=0;
     maxOutput=0;
@@ -65,32 +63,6 @@ void MiniPID::setP(int p){
     checkSigns();
 }
 
-/**
- * Changes the I parameter <br>
- * this->is used for overcoming disturbances, and ensuring that the controller always gets to the control mode.
- * Typically tuned second for "Position" based modes, and third for "Rate" or continuous based modes. <br>
- * Affects output through <b>output+=previous_errors*Igain ;previous_errors+=current_error</b>
- *
- * @see {@link #setMaxIOutput(int) setMaxIOutput} for how to restrict
- *
- * @param i New gain value for the Integral term
- */
-void MiniPID::setI(int i){
-    if(I!=0){
-        errorSum=errorSum*I/i;
-    }
-    if(maxIOutput!=0){
-        maxError=maxIOutput/i;
-    }
-    I=i;
-    checkSigns();
-    /* Implementation note:
-    * this->Scales the accumulated error to avoid output errors.
-    * As an example doubling the I term cuts the accumulated error in half, which results in the
-    * output change due to the I term constant during the transition.
-    *
-    */
-}
 
 void MiniPID::setD(int d){
     D=d;
@@ -114,30 +86,17 @@ void MiniPID::setF(int f){
  * @param i Integral gain.	Becomes large if setpoint cannot reach target quickly.
  * @param d Derivative gain. Responds quickly to large changes in error. Small values prevents P and I terms from causing overshoot.
  */
-void MiniPID::setPID(int p, int i, int d){
-    P=p;I=i;D=d;
+void MiniPID::setPID(int p,  int d){
+    P=p;D=d;
     checkSigns();
 }
 
-void MiniPID::setPID(int p, int i, int d,int f){
-    P=p;I=i;D=d;F=f;
+void MiniPID::setPID(int p,  int d,int f){
+    P=p;D=d;F=f;
     checkSigns();
 }
 
-/**Set the maximum output value contributed by the I component of the system
- * this->can be used to prevent large windup issues and make tuning simpler
- * @param maximum. Units are the same as the expected output value
- */
-void MiniPID::setMaxIOutput(int maximum){
-    /* Internally maxError and Izone are similar, but scaled for different purposes.
-     * The maxError is generated for simplifying math, since calculations against
-     * the max error are far more common than changing the I term or Izone.
-     */
-    maxIOutput=maximum;
-    if(I!=0){
-        maxError=maxIOutput/I;
-    }
-}
+
 
 /**Specify a maximum output. If a single parameter is specified, the minimum is
  * set to (-maximum).
@@ -154,11 +113,6 @@ void MiniPID::setOutputLimits(int minimum,int maximum){
     if(maximum<minimum)return;
     maxOutput=maximum;
     minOutput=minimum;
-
-    // Ensure the bounds of the I term are within the bounds of the allowable output swing
-    if(maxIOutput==0 || maxIOutput>(maximum-minimum) ){
-        setMaxIOutput(maximum-minimum);
-    }
 }
 
 /** Set the operating direction of the PID controller
@@ -188,7 +142,6 @@ void MiniPID::setSetpoint(int setpoint){
 int MiniPID::getOutput(int actual, int setpoint){
     int output;
     int Poutput;
-    int Ioutput;
     int Doutput;
     int Foutput;
 
@@ -231,13 +184,10 @@ int MiniPID::getOutput(int actual, int setpoint){
     // 1. maxIoutput restricts the amount of output contributed by the Iterm.
     // 2. prevent windup by not increasing errorSum if we're already running against our max Ioutput
     // 3. prevent windup by not increasing errorSum if output is output=maxOutput
-    Ioutput=I*errorSum;
-    if(maxIOutput!=0){
-        Ioutput=clamp(Ioutput,-maxIOutput,maxIOutput);
-    }
+
 
     //And, finally, we can just add the terms up
-    output=Foutput + Poutput + Ioutput + Doutput;
+    output=Foutput + Poutput + Doutput;
 
     //Figure out what we're doing with the error.
     if(minOutput!=maxOutput && !bounded(output, minOutput,maxOutput) ){
@@ -249,11 +199,6 @@ int MiniPID::getOutput(int actual, int setpoint){
     }
     else if(outputRampRate!=0 && !bounded(output, lastOutput-outputRampRate,lastOutput+outputRampRate) ){
         errorSum=error;
-    }
-    else if(maxIOutput!=0){
-        errorSum=clamp(errorSum+error,-maxError,maxError);
-        // In addition to output limiting directly, we also want to prevent I term
-        // buildup, so restrict the error directly
     }
     else{
         errorSum+=error;
@@ -363,13 +308,11 @@ bool MiniPID::bounded(int value, int min, int max){
 void MiniPID::checkSigns(){
     if(reversed){	//all values should be below zero
         if(P>0) P*=-1;
-        if(I>0) I*=-1;
         if(D>0) D*=-1;
         if(F>0) F*=-1;
     }
     else{	//all values should be above zero
         if(P<0) P*=-1;
-        if(I<0) I*=-1;
         if(D<0) D*=-1;
         if(F<0) F*=-1;
     }

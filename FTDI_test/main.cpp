@@ -3,6 +3,7 @@
 #include <chrono>
 #include "ftd2xx.h"
 #include "RS232.h"
+#include "MiniPID.h"
 using namespace std;
 
 
@@ -58,6 +59,7 @@ int main() {
     FH.writeOperationMode(setMode,0x03);
     FT_Write(ftHandle,setMode,sizeof(setMode),&BytesWritten);
 
+    //Set Speed
     FH.getData(data,-1000,1);
     FT_Write(ftHandle,data,sizeof(data),&BytesWritten);
 
@@ -66,5 +68,24 @@ int main() {
     FT_Write(ftHandle,controlw,sizeof(controlw),&BytesWritten);
     getchar();
     FT_Close(ftHandle);
+
+
+    //PID
+    MiniPID PD(20,1);// P 20 D 1
+    int PosDemand;
+    int PosActual;
+    int SpeedControl;
+    PD.setOutputLimits(30000);//speed max 30000
+    /************************/
+    /*  periodism  execute  */
+    /************************/
+    //pos_actual and demand get
+    SpeedControl=PD.getOutput(PosActual,PosDemand);
+    FH.getData(data,SpeedControl,1);
+    FT_Write(ftHandle,data,sizeof(data),&BytesWritten);
+
+
+
+
     return 0;
 }
